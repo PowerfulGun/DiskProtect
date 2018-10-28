@@ -1,0 +1,86 @@
+;
+; DiskProtect.inf
+;
+
+[Version]
+Signature="$WINDOWS NT$"
+Class=Sample ; TODO: edit Class
+ClassGuid={78A1C341-4539-11d3-B88D-00C04FAD5171} ; TODO: edit ClassGuid
+Provider=%ManufacturerName%
+CatalogFile=DiskProtect.cat
+DriverVer= ; TODO: set DriverVer in stampinf property pages
+
+[DestinationDirs]
+DefaultDestDir = 12
+DiskProtect_Device_CoInstaller_CopyFiles = 11
+
+; ================= Class section =====================
+
+[ClassInstall32]
+Addreg=SampleClassReg
+
+[SampleClassReg]
+HKR,,,0,%ClassName%
+HKR,,Icon,,-5
+
+[SourceDisksNames]
+1 = %DiskName%,,,""
+
+[SourceDisksFiles]
+DiskProtect.sys  = 1,,
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll=1 ; make sure the number matches with SourceDisksNames
+
+;*****************************************
+; Install Section
+;*****************************************
+
+[Manufacturer]
+%ManufacturerName%=Standard,NT$ARCH$
+
+[Standard.NT$ARCH$]
+%DiskProtect.DeviceDesc%=DiskProtect_Device, Root\DiskProtect ; TODO: edit hw-id
+
+[DiskProtect_Device.NT]
+CopyFiles=Drivers_Dir
+
+[Drivers_Dir]
+DiskProtect.sys
+
+;-------------- Service installation
+[DiskProtect_Device.NT.Services]
+AddService = DiskProtect,%SPSVCINST_ASSOCSERVICE%, DiskProtect_Service_Inst
+
+; -------------- DiskProtect driver install sections
+[DiskProtect_Service_Inst]
+DisplayName    = %DiskProtect.SVCDESC%
+ServiceType    = 1               ; SERVICE_KERNEL_DRIVER
+StartType      = 3               ; SERVICE_DEMAND_START
+ErrorControl   = 1               ; SERVICE_ERROR_NORMAL
+ServiceBinary  = %12%\DiskProtect.sys
+
+;
+;--- DiskProtect_Device Coinstaller installation ------
+;
+
+[DiskProtect_Device.NT.CoInstallers]
+AddReg=DiskProtect_Device_CoInstaller_AddReg
+CopyFiles=DiskProtect_Device_CoInstaller_CopyFiles
+
+[DiskProtect_Device_CoInstaller_AddReg]
+HKR,,CoInstallers32,0x00010000, "WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll,WdfCoInstaller"
+
+[DiskProtect_Device_CoInstaller_CopyFiles]
+WdfCoInstaller$KMDFCOINSTALLERVERSION$.dll
+
+[DiskProtect_Device.NT.Wdf]
+KmdfService =  DiskProtect, DiskProtect_wdfsect
+[DiskProtect_wdfsect]
+KmdfLibraryVersion = $KMDFVERSION$
+
+[Strings]
+SPSVCINST_ASSOCSERVICE= 0x00000002
+ManufacturerName="<Your manufacturer name>" ;TODO: Replace with your manufacturer name
+ClassName="Samples" ; TODO: edit ClassName
+DiskName = "DiskProtect Installation Disk"
+DiskProtect.DeviceDesc = "DiskProtect Device"
+DiskProtect.SVCDESC = "DiskProtect Service"
